@@ -47,13 +47,13 @@ create table if not exists artists (artist_id varchar,
 """)
 
 time_table_create = ("""
-create table if not exists time (start_time int,
+create table if not exists time (start_time timestamp,
                                 hour int,
                                 day int,
-                                week varchar,
-                                month varchar,
+                                week int,
+                                month int,
                                 year int,
-                                weekday varchar
+                                weekday int
 );
 """)
 
@@ -73,7 +73,12 @@ insert into songplays (songplay_id,
 """)
 
 user_table_insert = ("""
-
+insert into users (user_id, 
+                    first_name,
+                    last_name,
+                    gender,
+                    level) values
+                    (%s, %s, %s, %s, %s)
 """)
 
 song_table_insert = ("""
@@ -86,22 +91,29 @@ insert into songs (song_id,
 """)
 
 artist_table_insert = ("""
-insert into artist (
-                    artist_id,
-                    artist_name,
-                    artist_location,
-                    artist_latitude,
-                    artist_longitude
-)
+insert into artists (artist_id,
+                    name,
+                    location,
+                    latitude,
+                    longitude) values
+                    (%s, %s, %s, %s, %s)
 """)
 
-
 time_table_insert = ("""
+insert into time (start_time,
+                    hour,
+                    day,
+                    week,
+                    month,
+                    year,
+                    weekday) values
+                    (%s, %s, %s, %s, %s, %s, %s)
 """)
 
 # FIND SONGS
-
 song_select = ("""
+SELECT song_id, artists.artist_id FROM songs JOIN artists ON songs.artist_id = artists.artist_id WHERE songs.title = %s AND artists.name = %s AND songs.duration = %s
+
 """)
 
 # QUERY LISTS
