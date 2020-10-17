@@ -8,37 +8,44 @@ from sql_queries import *
 def process_song_file(cur, filepath):
     # open song file
     df = pd.read_json(filepath, lines=True)
+#     print(filepath)
 
     # insert song record
-#     song_data = 
-#     cur.execute(song_table_insert, song_data)
+    song_data = df[['song_id', 'title', 'artist_id', 'year', 'duration']].values[0].tolist()
+    cur.execute(song_table_insert, song_data)
     
-#     # insert artist record
-#     artist_data = 
-#     cur.execute(artist_table_insert, artist_data)
-
+    # insert artist record
+    artist_data = df[["artist_id","artist_name","artist_location","artist_latitude","artist_longitude"]].values[0].tolist()
+    cur.execute(artist_table_insert, artist_data)
 
 def process_log_file(cur, filepath):
     # open log file
-    df = pd.read_json('data/song_data/data/song_data/A/A/A/TRAAAAW128F429D538.json', lines=True)    
+    df = pd.read_json(filepath, lines=True)    
 
     # filter by NextSong action
-    df = 
+    nextSong = df[["song"]]
 
     # convert timestamp column to datetime
-    t = 
+    t = pd.to_datetime(df['ts'], unit='ms')
     
     # insert time data records
-    time_data = 
-    column_labels = 
-    time_df = 
+    timestamp = pd.to_datetime(df.ts)
+    # timestamp
+    time_data = (timestamp, t.dt.hour, t.dt.day, t.dt.weekofyear, t.dt.month, t.dt.year, t.dt.weekday)
+
+    column_labels = ["start_time", "hour", "day", "week of year", "month", "year", "weekday"]
+    d = pd.Series((time_data), index=column_labels).to_dict()
+    time_df = pd.DataFrame({c: d for c,d in zip (column_labels, time_data)}).dropna()
 
     for i, row in time_df.iterrows():
         cur.execute(time_table_insert, list(row))
 
     # load user table
-    user_df = 
-
+    user_data = (df.userId, df.firstName, df.lastName, df.gender, df.level)
+    column_labels= ['userId', 'firstName', 'lastName', 'gender', 'level']
+    d = pd.Series((user_data), index=column_labels).to_dict()
+    user_df = pd.DataFrame({c: d for c,d in zip (column_labels, user_data)}).dropna()
+    
     # insert user records
     for i, row in user_df.iterrows():
         cur.execute(user_table_insert, row)
@@ -49,16 +56,15 @@ def process_log_file(cur, filepath):
         # get songid and artistid from song and artist tables
         cur.execute(song_select, (row.song, row.artist, row.length))
         results = cur.fetchone()
-        
+        print("results: ", results)
         if results:
             songid, artistid = results
         else:
             songid, artistid = None, None
 
         # insert songplay record
-        songplay_data = 
+        songplay_data = (songid, artistid)
         cur.execute(songplay_table_insert, songplay_data)
-
 
 def process_data(cur, conn, filepath, func):
     # get all files matching extension from directory
@@ -84,7 +90,7 @@ def main():
     cur = conn.cursor()
 
     process_data(cur, conn, filepath='data/song_data', func=process_song_file)
-#     process_data(cur, conn, filepath='data/log_data', func=process_log_file)
+    process_data(cur, conn, filepath='data/log_data', func=process_log_file)
 
     conn.close()
 
